@@ -19,10 +19,21 @@ contract Messenger {
     // メッセージの受取人アドレスをkeyにメッセージを保存します。
     mapping(address => Message[]) private _messagesAtAddress;
 
+    event NewMessage(
+        address sender,
+        address receiver,
+        uint256 depositInWei,
+        uint256 timestamp,
+        string text,
+        bool isPending
+    );
+
+    event MessageConfirmed(address receiver, uint256 index);
+
     constructor() payable {
         console.log("Here is my first smart contract!");
     }
-    
+
     // ユーザからメッセージを受け取り、状態変数に格納します。
     function post(string memory _text, address payable _receiver)
         public
@@ -34,7 +45,7 @@ contract Messenger {
             _text,
             msg.value
         );
-    
+
         _messagesAtAddress[_receiver].push(
             Message(
                 payable(msg.sender),
@@ -44,6 +55,15 @@ contract Messenger {
                 _text,
                 true
             )
+        );
+
+        emit NewMessage(
+            msg.sender,
+            _receiver,
+            msg.value,
+            block.timestamp,
+            _text,
+            true
         );
     }
 
@@ -56,6 +76,8 @@ contract Messenger {
 
         // メッセージの受取人にavaxを送信します。
         _sendAvax(message.receiver, message.depositInWei);
+
+        emit MessageConfirmed(message.receiver, _index);
     }
 
     // メッセージ受け取りを却下して、AVAXをメッセージ送信者へ返却します。
@@ -66,6 +88,8 @@ contract Messenger {
 
         // メッセージの送信者にavaxを返却します。
         _sendAvax(message.sender, message.depositInWei);
+
+        emit MessageConfirmed(message.receiver, _index);
     }
 
     function _confirmMessage(uint256 _index) private {

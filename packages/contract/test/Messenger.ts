@@ -16,6 +16,14 @@ describe("Messenger", function () {
   }
 
   describe("Post", function () {
+    it('Should emit an event on post', async function () {
+      const { messenger, otherAccount } = await loadFixture(deployContract);
+
+      await expect(
+        messenger.post('text', otherAccount.address, { value: 1 })
+      ).to.emit(messenger, 'NewMessage');
+    });
+
     it("Should send the correct amount of tokens", async function () {
       const { messenger, owner, otherAccount } = await loadFixture(deployContract);
       const test_deposit = 10;
@@ -47,6 +55,21 @@ describe("Messenger", function () {
   });
 
   describe("Accept", function () {
+    it('Should emit an event on accept', async function () {
+      const { messenger, otherAccount } = await loadFixture(deployContract);
+      const test_deposit = 1;
+
+      await messenger.post('text', otherAccount.address, {
+        value: test_deposit,
+      });
+
+      const first_index = 0;
+      await expect(messenger.connect(otherAccount).accept(first_index)).to.emit(
+        messenger,
+        'MessageConfirmed'
+      );
+    });
+
     it("isPending must be changed", async function () {
       const { messenger, otherAccount } = await loadFixture(deployContract);
       const first_index = 0;
@@ -88,6 +111,21 @@ describe("Messenger", function () {
   });
 
   describe("Deny", function () {
+    it('Should emit an event on deny', async function () {
+      const { messenger, otherAccount } = await loadFixture(deployContract);
+      const test_deposit = 1;
+
+      await messenger.post('text', otherAccount.address, {
+        value: test_deposit,
+      });
+
+      const first_index = 0;
+      await expect(messenger.connect(otherAccount).deny(first_index)).to.emit(
+        messenger,
+        'MessageConfirmed'
+      );
+    });
+
     it("isPending must be changed", async function () {
       const { messenger, otherAccount } = await loadFixture(deployContract);
       const first_index = 0;
